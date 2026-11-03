@@ -6,7 +6,16 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
 
-Windows PowerShell automation scripts for system administration, security incident response, and compliance auditing. The scripts illustrate repeatable administration workflows, structured reporting, and safeguards where appropriate. Review each script's parameters and side effects before running; do not assume every operation is idempotent or production-validated.
+Windows PowerShell automation scripts for system administration, security incident response, and compliance auditing.
+
+**Safety update (Nov 2026):** `system/organize_docs.ps1` and `system/recategorize_docs.ps1` now preview changes by default and require `-Apply` before copying or moving files. Paths are user-configurable, and recategorization never overwrites an existing file. Use your own private CSV mapping instead of placing personal filenames in the public repository.
+
+Example: `powershell -File system/organize_docs.ps1 -SourceRoot "$env:USERPROFILE\\OneDrive"`
+
+After reviewing the preview: `powershell -File system/organize_docs.ps1 -Apply`
+
+Recategorization example: `powershell -File system/recategorize_docs.ps1 -MappingCsv C:\\Local\\mapping.csv -Apply -Confirm`
+ The scripts illustrate repeatable administration workflows, structured reporting, and safeguards where appropriate. Review each script's parameters and side effects before running; do not assume every operation is idempotent or production-validated.
 
 ---
 
