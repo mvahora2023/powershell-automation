@@ -1,0 +1,22 @@
+name: PowerShell document safety tests
+on:
+  push:
+    branches: [master]
+    paths: ['system/**', 'Tests/**', '.github/workflows/test-documents.yml']
+  pull_request:
+    paths: ['system/**', 'Tests/**', '.github/workflows/test-documents.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+      - name: Run document safety tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -RequiredVersion 5.7.1
+          Invoke-Pester -Path Tests/DocumentSafety.Tests.ps1 -CI
