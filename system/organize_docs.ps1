@@ -1,10 +1,17 @@
-# Organize-OneDrive-DC.ps1
-# Safe copy-only organizer — no moves, no deletes
-# Destination: C:\Users\makin\Organized_Docs\
-
-$SourceRoot = 'C:\Users\makin\OneDrive'
-$DestRoot   = 'C:\Users\makin\Organized_Docs'
-$LogFile    = "$DestRoot\copy_log.txt"
+#Requires -Version 5.1
+# Safe copy-only organizer. Preview is the default: -Apply is required for copies.
+[CmdletBinding(SupportsShouldProcess,ConfirmImpact='Medium')]
+param(
+    [string]$SourceRoot = (Join-Path $env:USERPROFILE 'OneDrive'),
+    [string]$DestRoot = (Join-Path $env:USERPROFILE 'Organized_Docs'),
+    [switch]$Apply
+)
+Set-StrictMode -Version Latest
+$ErrorActionPreference='Stop'
+$LogFile = Join-Path $DestRoot 'copy_log.txt'
+if (-not (Test-Path -LiteralPath $SourceRoot -PathType Container)) {
+    throw "Source folder not found: $SourceRoot"
+}
 
 $TargetExts = @('.pdf','.docx','.xlsx','.pptx','.txt','.md','.csv')
 
@@ -37,7 +44,6 @@ $FolderMap = [ordered]@{
     'study guide'   = 'Cybersecurity\Study_Guides'
     'comptia'       = 'CompTIA'
     'dccc'          = 'DCCC'
-    'mvahora1@mail.dccc' = 'DCCC'
     'asu courses'   = 'DCCC\ASU_Transfer'
     'penn state courses'= 'DCCC\Transfer_Planning'
     'clep'          = 'DCCC\CLEP'
@@ -110,21 +116,30 @@ Write-Output "  TOTAL: $($plan.Count) files"
 Write-Output "==========================="
 
 # Execute copy
-New-Item -ItemType Directory -Path $DestRoot -Force | Out-Null
-"" | Out-File $LogFile -Encoding utf8
+if (-not $Apply) {
+    $plan | Select-Object -First 25 File,Folder,KB | Format-Table -AutoSize
+    Write-Output 'PREVIEW ONLY: no copies made. Run with -Apply to copy files.'
+    return
+}
+if ($PSCmdlet.ShouldProcess($DestRoot, 'Create destination and copy selected documents')) {
+    New-Item -ItemType Directory -Path $DestRoot -Force | Out-Null
+} else { return }
+"Copy session $(Get-Date -Format o)" | Add-Content -LiteralPath $LogFile -Encoding UTF8
 
 $copied = 0; $skipped = 0; $errors = 0
 
 foreach ($item in $plan) {
     try {
-        New-Item -ItemType Directory -Path (Split-Path $item.Dest) -Force | Out-Null
-        if (Test-Path $item.Dest) {
+        if (Test-Path -LiteralPath $item.Dest) {
             "SKIP: $($item.File) -> $($item.Folder)" | Add-Content $LogFile
             $skipped++
         } else {
-            Copy-Item -Path $item.Source -Destination $item.Dest -Force
-            "COPY: $($item.File) -> $($item.Folder)" | Add-Content $LogFile
-            $copied++
+            if ($PSCmdlet.ShouldProcess($item.Source, "Copy to $($item.Dest)")) {
+                New-Item -ItemType Directory -Path (Split-Path $item.Dest) -Force | Out-Null
+                Copy-Item -LiteralPath $item.Source -Destination $item.Dest -ErrorAction Stop
+                "COPY: $($item.File) -> $($item.Folder)" | Add-Content -LiteralPath $LogFile
+                $copied++
+            }
         }
     } catch {
         "ERROR: $($item.File) -- $_" | Add-Content $LogFile
