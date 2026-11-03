@@ -6,7 +6,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?logo=windows&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
 
-Windows PowerShell automation scripts for system administration, security incident response, and compliance auditing. All scripts are idempotent, produce structured output, and follow production scripting practices.
+Windows PowerShell automation scripts for system administration, security incident response, and compliance auditing. The scripts illustrate repeatable administration workflows, structured reporting, and safeguards where appropriate. Review each script's parameters and side effects before running; do not assume every operation is idempotent or production-validated.
 
 ---
 
