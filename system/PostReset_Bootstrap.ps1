@@ -3,10 +3,17 @@
 #  Run once after Windows reset
 # ================================
 
-Write-Host "Starting Mahmadarsh OS v2 bootstrap..." -ForegroundColor Cyan
+[CmdletBinding()]
+param([switch]$Apply)
+if (-not $Apply) {
+    Write-Output 'PREVIEW ONLY. With -Apply this script may install applications, change Windows preferences, and create sample maintenance scripts.'
+    Write-Output 'Inspect every step and run in a disposable test machine first. No local data is included in this GitHub repository.'
+    return
+}
+Write-Host "Starting Windows bootstrap (approved -Apply)..." -ForegroundColor Cyan
 
 # === Paths ===
-$UserRoot   = "C:\Users\makin"
+$UserRoot   = $env:USERPROFILE
 $Organized  = Join-Path $UserRoot "Organized"
 $Maintenance = Join-Path $UserRoot "Maintenance"
 $Logs        = Join-Path $Maintenance "Logs"
@@ -97,21 +104,29 @@ Write-Host "[OK] Security baseline applied."
 # === 7. Install lightweight automation scripts ===
 
 # Backup script
-$backupScript = @"
-\$source = 'C:\Users\makin\Organized'
-\$destRoot = 'D:\Backups'
-if (-not (Test-Path \$destRoot)) { New-Item -ItemType Directory -Path \$destRoot | Out-Null }
-\$stamp = Get-Date -Format 'yyyyMMdd_HHmm'
-\$dest = Join-Path \$destRoot "Organized_\$stamp"
-Copy-Item -Path \$source -Destination \$dest -Recurse -Force
-"@
+$backupScript = @'
+param([switch]$Apply)
+if (-not $Apply) { Write-Output "Preview: would copy Organized to Backups. Use -Apply to perform the copy."; return }
+$source = Join-Path $env:USERPROFILE 'Organized'
+$destRoot = Join-Path $env:USERPROFILE 'Backups'
+if (-not (Test-Path -LiteralPath $source)) { throw "Source folder does not exist" }
+if (-not (Test-Path -LiteralPath $destRoot)) { New-Item -ItemType Directory -Path $destRoot | Out-Null }
+$stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+$dest = Join-Path $destRoot ("Organized_" + $stamp)
+if (Test-Path -LiteralPath $dest) { throw "Refusing to overwrite existing destination" }
+Copy-Item -LiteralPath $source -Destination $dest -Recurse -ErrorAction Stop
+'@
+
 Set-Content -Path "$Maintenance\backup_organized.ps1" -Value $backupScript -Encoding UTF8
 
 # Temp cleanup script
-$cleanupScript = @"
-Remove-Item -Path \$env:TEMP\* -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path 'C:\Windows\Temp\*' -Recurse -Force -ErrorAction SilentlyContinue
-"@
+$cleanupScript = @'
+param([switch]$Apply)
+if (-not $Apply) { Write-Output "Preview: cleanup script requires explicit -Apply."; return }
+Write-Output "Review temporary folders and back up anything important before deletion."
+Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+'@
+
 Set-Content -Path "$Maintenance\cleanup_temp.ps1" -Value $cleanupScript -Encoding UTF8
 
 Write-Host "[OK] Automation scripts installed."
