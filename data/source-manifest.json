@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "project": "powershell-automation",
+  "synthetic": {
+    "source": "Script catalog with training examples",
+    "mode": "default"
+  },
+  "public": [
+    {
+      "id": "releases",
+      "label": "PowerShell public releases",
+      "type": "releases",
+      "repo": "PowerShell"
+    },
+    {
+      "id": "kev",
+      "label": "CISA KEV Microsoft entries",
+      "type": "kev",
+      "terms": [
+        "microsoft"
+      ]
+    }
+  ],
+  "localData": {
+    "enabled": false,
+    "fileImport": false,
+    "privateAccounts": false,
+    "deviceAccess": false
+  },
+  "dataPolicy": "No mixing of reference records into fictional KPI counts; source and retrieval date displayed; public fetch only on explicit click."
+}
